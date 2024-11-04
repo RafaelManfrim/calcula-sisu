@@ -1,101 +1,267 @@
+'use client'
+
 import Image from "next/image";
+import { useEffect, useState } from "react";
+import { InputControl } from "./components/InputControl";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod"
+import { sisuApi } from "./lib/axios";
+import toast from "react-hot-toast";
+import LogoImg from "@/app/assets/logo.png"
+
+type City = {
+  id: string
+  nome: string
+  uf: string
+  slug: string
+}
+
+type University = {
+  campus: string
+  slug: string
+  id: string
+  cidade: string
+  uf: string
+  universidade: string
+  slugUni: string
+  numCursos: string
+}
+
+type Course = {
+  id: string
+  nome: string
+  tipocurso: string
+  slug: string
+  slugTipoCurso: string
+  turno: string
+  ultimaEdicao: string
+  cidade: string
+  uf: string
+  campus: string
+  slugCampus: string
+  universidade: string
+  slugUni: string
+}
+
+type NotaDeCorte = {
+  ano: string
+  descricao: string
+  nota: string
+}
+
+type CourseInfo = {
+  id: string
+  nome: string
+  universidade: string
+  campus: string
+  cidade: string
+  uf: string
+  turno: string
+  pesoLing: string
+  pesoMat: string
+  pesoCH: string
+  pesoCN: string
+  pesoRed: string
+  mediaMinLin: string
+  mediaMinMat: string
+  mediaMinCH: string
+  mediaMinCN: string
+  mediaMinRed: string
+  mediaMinGeral: string
+  bonus: null
+  bonusComentario: null
+  notasDeCorte: NotaDeCorte[]
+  slugUni: string
+  slugCampus: string
+  vagas: string
+}
+
+const simulatorSchema = z.object({
+  math_score: z.number({
+    invalid_type_error: "A nota precisa ser um número",
+    required_error: "A nota é obrigatória"
+  }).min(0, "A nota precisa ser positiva").max(1000, "A nota precisa ser menor do que 1000"),
+  languages_score: z.number({
+    invalid_type_error: "A nota precisa ser um número",
+    required_error: "A nota é obrigatória"
+  }).min(0, "A nota precisa ser positiva").max(1000, "A nota precisa ser menor do que 1000"),
+  human_science_score: z.number({
+    invalid_type_error: "A nota precisa ser um número",
+    required_error: "A nota é obrigatória"
+  }).min(0, "A nota precisa ser positiva").max(1000, "A nota precisa ser menor do que 1000"),
+  science_score: z.number({
+    invalid_type_error: "A nota precisa ser um número",
+    required_error: "A nota é obrigatória"
+  }).min(0, "A nota precisa ser positiva").max(1000, "A nota precisa ser menor do que 1000"),
+  essay_score: z.number({
+    invalid_type_error: "A nota precisa ser um número",
+    required_error: "A nota é obrigatória"
+  }).min(0, "A nota precisa ser positiva").max(1000, "A nota precisa ser menor do que 1000"),
+})
+
+export type SimulatorFormSchema = z.infer<typeof simulatorSchema>
+
+type SimulatorResponse = {
+
+}
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [isLoading, setIsLoading] = useState(false)
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  const [isLoadingCities, setIsLoadingCities] = useState(false)
+  const [isLoadingUniversities, setIsLoadingUniversities] = useState(false)
+  const [isLoadingCourses, setIsLoadingCourses] = useState(false)
+
+  const [cities, setCities] = useState<City[]>()
+  const [universities, setUniversities] = useState<University[]>()
+  const [courses, setCourses] = useState<Course[]>()
+
+  const [courseInfo, setCourseInfo] = useState<CourseInfo>()
+
+  const [simulatorResponse, setSimulatorResponse] = useState<SimulatorResponse>()
+
+  const simulatorForm = useForm<SimulatorFormSchema>({
+    resolver: zodResolver(simulatorSchema)
+  })
+
+  async function handleSimulate(data: SimulatorFormSchema) {
+    setIsLoading(true)
+
+    try {
+      // const response = await api.post("/api/simulate", data)
+
+      // console.log(response.data)
+    } catch (error) {
+      console.log(error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  async function fetchCities() {
+    setIsLoadingCities(true)
+
+    try {
+      const response = await sisuApi.get("searchcity")
+
+      console.log(response)
+
+      // setCities(response.data)
+    } catch (error) {
+      console.log(error)
+
+      toast.error("Erro ao carregar as cidades")
+    } finally {
+      setIsLoadingCities(false)
+    }
+  }
+
+  async function fetchUniversities() {
+
+  }
+
+  async function fetchCourses() {
+
+  }
+
+  useEffect(() => {
+    fetchCities()
+  }, [])
+
+  useEffect(() => {
+    fetchUniversities()
+  }, [])
+
+  useEffect(() => {
+    fetchCourses()
+  }, [])
+
+  useEffect(() => {
+    const errors = simulatorForm.formState.errors
+
+    if (Object.keys(errors).length === 0) return
+
+    console.log(errors)
+  }, [simulatorForm.formState.errors])
+
+  return (
+    <main>
+      <header className="bg-orange-400 p-4 px-12 flex justify-center items-center">
+        <Image className="dark:invert" src={LogoImg} alt="ENEM Simulator Logo" width={180} height={38} priority />
+      </header>
+
+      <section className="bg-white max-w-4xl mx-auto mt-14 p-4 rounded-md shadow-md">
+        <h1 className="text-orange-400 font-bold text-4xl">
+          Simulador de Nota do ENEM
+        </h1>
+
+        <form className="mt-4 flex flex-col gap-3">
+          <div className="flex gap-3">
+            <InputControl labelText="Nota de Linguagens" register={simulatorForm.register("languages_score", { valueAsNumber: true })} />
+            {/* <InputControl labelText="Peso" containerClassName="max-w-48" register={simulatorForm.register("languages_weight", { valueAsNumber: true })} /> */}
+          </div>
+          <div className="flex gap-3">
+            <InputControl labelText="Nota de Matemática" register={simulatorForm.register("math_score", { valueAsNumber: true })} />
+            {/* <InputControl labelText="Peso" containerClassName="max-w-48" register={simulatorForm.register("math_weight", { valueAsNumber: true })} /> */}
+          </div>
+
+          <div className="flex gap-3">
+            <InputControl labelText="Nota de Redação" register={simulatorForm.register("essay_score", { valueAsNumber: true })} />
+            {/* <InputControl labelText="Peso" containerClassName="max-w-48" register={simulatorForm.register("essay_weight", { valueAsNumber: true })} /> */}
+          </div>
+
+          <div className="flex gap-3">
+            <InputControl labelText="Nota de Ciências Humanas" register={simulatorForm.register("human_science_score", { valueAsNumber: true })} />
+            {/* <InputControl labelText="Peso" containerClassName="max-w-48" register={simulatorForm.register("human_science_weight", { valueAsNumber: true })} /> */}
+          </div>
+
+          <div className="flex gap-3">
+            <InputControl labelText="Nota de Ciências da Natureza" register={simulatorForm.register("science_score", { valueAsNumber: true })} />
+            {/* <InputControl labelText="Peso" containerClassName="max-w-48" register={simulatorForm.register("science_weight", { valueAsNumber: true })} /> */}
+          </div>
+
+          <div className="flex flex-col w-full">
+            <label className="text-lg" htmlFor="city">Selecione uma cidade</label>
+            <select className="bg-background p-2 px-4 h-10 text-xl" name="city" id="city">
+              {cities && cities.map(city => <option value={city.slug}>{city.nome}</option>)}
+            </select>
+          </div>
+
+          <div>
+            Selecione uma universidade
+            <select name="" id=""></select>
+          </div>
+
+          <div>
+            Selecione o curso desejado
+            <select name="" id=""></select>
+          </div>
+
+          <button
+            type="submit"
+            className="text-white font-bold p-2 bg-orange-400 rounded-md cursor-pointer hover:brightness-95 transition-all mt-8"
+            onClick={simulatorForm.handleSubmit(handleSimulate)}
           >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+            Calcular
+          </button>
+        </form>
+      </section>
+      {simulatorResponse && (
+        <section className="bg-white max-w-4xl mx-auto mt-4 p-4 rounded-md shadow-md">
+          <h1 className="text-orange-400 font-bold text-4xl">
+            Resultado
+          </h1>
+
+          {/* <p className="mt-2">
+                A sua nota baseada nos dados informados será: {' '}
+                <span className="text-orange-400 font-bold">
+                  {simulatorResponse.finalNote.toFixed(2)}
+                </span>
+              </p> */}
+        </section>
+      )}
+
+    </main>
   );
 }
