@@ -6,7 +6,7 @@ import { InputControl } from "./components/InputControl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod"
-import { sisuApi } from "./lib/axios";
+import { api } from "./lib/axios";
 import toast from "react-hot-toast";
 import LogoImg from "@/app/assets/logo.png"
 
@@ -117,6 +117,9 @@ export default function Home() {
   const [universities, setUniversities] = useState<University[]>()
   const [courses, setCourses] = useState<Course[]>()
 
+  const [selectedCity, setSelectedCity] = useState<City>()
+  const [selectedUniversity, setSelectedUniversity] = useState<University>()
+
   const [courseInfo, setCourseInfo] = useState<CourseInfo>()
 
   const [simulatorResponse, setSimulatorResponse] = useState<SimulatorResponse>()
@@ -143,11 +146,13 @@ export default function Home() {
     setIsLoadingCities(true)
 
     try {
-      const response = await sisuApi.get("searchcity")
+      const response = await api.get("fetch_cities")
 
-      console.log(response)
+      const cities_sorted = response.data.sort(
+        (a: City, b: City) => a.nome.localeCompare(b.nome)
+      )
 
-      // setCities(response.data)
+      setCities(cities_sorted)
     } catch (error) {
       console.log(error)
 
@@ -158,11 +163,39 @@ export default function Home() {
   }
 
   async function fetchUniversities() {
+    if (!selectedCity) return
 
+    setIsLoadingUniversities(true)
+
+    try {
+      const response = await api.get(`fetch_universities/${selectedCity.uf}/${selectedCity.slug}`)
+
+      setUniversities(response.data)
+    } catch (error) {
+      console.log(error)
+
+      toast.error("Erro ao carregar as universidades")
+    } finally {
+      setIsLoadingUniversities(false)
+    }
   }
 
   async function fetchCourses() {
+    if (!selectedUniversity) return
 
+    setIsLoadingCourses(true)
+
+    try {
+      const response = await api.get(`fetch_courses/${selectedUniversity.slugUni}/${selectedUniversity.slug}`)
+
+      setCourses(response.data)
+    } catch (error) {
+      console.log(error)
+
+      toast.error("Erro ao carregar os cursos")
+    } finally {
+      setIsLoadingCourses(false)
+    }
   }
 
   useEffect(() => {
@@ -170,12 +203,16 @@ export default function Home() {
   }, [])
 
   useEffect(() => {
+    if (!selectedCity) return
+
     fetchUniversities()
-  }, [])
+  }, [selectedCity])
 
   useEffect(() => {
+    if (!selectedUniversity) return
+
     fetchCourses()
-  }, [])
+  }, [selectedUniversity])
 
   useEffect(() => {
     const errors = simulatorForm.formState.errors
@@ -193,32 +230,27 @@ export default function Home() {
 
       <section className="bg-white max-w-4xl mx-auto mt-14 p-4 rounded-md shadow-md">
         <h1 className="text-orange-400 font-bold text-4xl">
-          Simulador de Nota do ENEM
+          Simulador de Nota via SISU
         </h1>
 
         <form className="mt-4 flex flex-col gap-3">
           <div className="flex gap-3">
             <InputControl labelText="Nota de Linguagens" register={simulatorForm.register("languages_score", { valueAsNumber: true })} />
-            {/* <InputControl labelText="Peso" containerClassName="max-w-48" register={simulatorForm.register("languages_weight", { valueAsNumber: true })} /> */}
           </div>
           <div className="flex gap-3">
             <InputControl labelText="Nota de Matemática" register={simulatorForm.register("math_score", { valueAsNumber: true })} />
-            {/* <InputControl labelText="Peso" containerClassName="max-w-48" register={simulatorForm.register("math_weight", { valueAsNumber: true })} /> */}
           </div>
 
           <div className="flex gap-3">
             <InputControl labelText="Nota de Redação" register={simulatorForm.register("essay_score", { valueAsNumber: true })} />
-            {/* <InputControl labelText="Peso" containerClassName="max-w-48" register={simulatorForm.register("essay_weight", { valueAsNumber: true })} /> */}
           </div>
 
           <div className="flex gap-3">
             <InputControl labelText="Nota de Ciências Humanas" register={simulatorForm.register("human_science_score", { valueAsNumber: true })} />
-            {/* <InputControl labelText="Peso" containerClassName="max-w-48" register={simulatorForm.register("human_science_weight", { valueAsNumber: true })} /> */}
           </div>
 
           <div className="flex gap-3">
             <InputControl labelText="Nota de Ciências da Natureza" register={simulatorForm.register("science_score", { valueAsNumber: true })} />
-            {/* <InputControl labelText="Peso" containerClassName="max-w-48" register={simulatorForm.register("science_weight", { valueAsNumber: true })} /> */}
           </div>
 
           <div className="flex flex-col w-full">
