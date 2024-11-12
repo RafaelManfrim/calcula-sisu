@@ -9,6 +9,7 @@ import { z } from "zod"
 import { api } from "./lib/axios";
 import toast from "react-hot-toast";
 import LogoImg from "@/app/assets/logo.png"
+import { CustomSelect } from "./components/CustomSelect";
 
 type City = {
   id: string
@@ -103,7 +104,10 @@ const simulatorSchema = z.object({
 export type SimulatorFormSchema = z.infer<typeof simulatorSchema>
 
 type SimulatorResponse = {
-
+  notes: SimulatorFormSchema
+  course: CourseInfo
+  finalNote: number
+  history: NotaDeCorte[]
 }
 
 export default function Home() {
@@ -119,8 +123,7 @@ export default function Home() {
 
   const [selectedCity, setSelectedCity] = useState<City>()
   const [selectedUniversity, setSelectedUniversity] = useState<University>()
-
-  const [courseInfo, setCourseInfo] = useState<CourseInfo>()
+  const [selectedCourse, setSelectedCourse] = useState<Course>()
 
   const [simulatorResponse, setSimulatorResponse] = useState<SimulatorResponse>()
 
@@ -129,12 +132,30 @@ export default function Home() {
   })
 
   async function handleSimulate(data: SimulatorFormSchema) {
+    if (!selectedCourse) return
+
     setIsLoading(true)
 
     try {
-      // const response = await api.post("/api/simulate", data)
+      const response = await api.get(`/fetch_course/${selectedCourse.id}`)
+      const courseInfo = response.data[0]
 
-      // console.log(response.data)
+      setSimulatorResponse({
+        notes: data,
+        course: courseInfo,
+        finalNote: (Number(courseInfo.pesoMat) * data.math_score +
+          Number(courseInfo.pesoLing) * data.languages_score +
+          Number(courseInfo.pesoCH) * data.human_science_score +
+          Number(courseInfo.pesoCN) * data.science_score +
+          Number(courseInfo.pesoRed) * data.essay_score)
+          /
+          (Number(courseInfo.pesoMat) +
+            Number(courseInfo.pesoLing) +
+            Number(courseInfo.pesoCH) +
+            Number(courseInfo.pesoCN) +
+            Number(courseInfo.pesoRed)),
+        history: courseInfo.notasDeCorte.reverse()
+      })
     } catch (error) {
       console.log(error)
     } finally {
@@ -150,7 +171,11 @@ export default function Home() {
 
       const cities_sorted = response.data.sort(
         (a: City, b: City) => a.nome.localeCompare(b.nome)
-      )
+      ).map((city: City) => ({
+        ...city,
+        value: city.id,
+        label: city.nome
+      }))
 
       setCities(cities_sorted)
     } catch (error) {
@@ -168,9 +193,15 @@ export default function Home() {
     setIsLoadingUniversities(true)
 
     try {
-      const response = await api.get(`fetch_universities/${selectedCity.uf}/${selectedCity.slug}`)
+      const response = await api.get(`fetch_colleges/${selectedCity.uf}/${selectedCity.slug}`)
 
-      setUniversities(response.data)
+      setUniversities(response.data.map(
+        (university: University) => ({
+          ...university,
+          value: university.id,
+          label: `${university.slugUni.toUpperCase()} - ${university.campus}`
+        })
+      ))
     } catch (error) {
       console.log(error)
 
@@ -188,7 +219,13 @@ export default function Home() {
     try {
       const response = await api.get(`fetch_courses/${selectedUniversity.slugUni}/${selectedUniversity.slug}`)
 
-      setCourses(response.data)
+      setCourses(response.data.map(
+        (course: Course) => ({
+          ...course,
+          value: course.id,
+          label: course.nome
+        }))
+      )
     } catch (error) {
       console.log(error)
 
@@ -203,18 +240,6 @@ export default function Home() {
   }, [])
 
   useEffect(() => {
-    if (!selectedCity) return
-
-    fetchUniversities()
-  }, [selectedCity])
-
-  useEffect(() => {
-    if (!selectedUniversity) return
-
-    fetchCourses()
-  }, [selectedUniversity])
-
-  useEffect(() => {
     const errors = simulatorForm.formState.errors
 
     if (Object.keys(errors).length === 0) return
@@ -223,7 +248,7 @@ export default function Home() {
   }, [simulatorForm.formState.errors])
 
   return (
-    <main>
+    <main className="mb-14">
       <header className="bg-orange-400 p-4 px-12 flex justify-center items-center">
         <Image className="dark:invert" src={LogoImg} alt="ENEM Simulator Logo" width={180} height={38} priority />
       </header>
@@ -234,40 +259,58 @@ export default function Home() {
         </h1>
 
         <form className="mt-4 flex flex-col gap-3">
-          <div className="flex gap-3">
-            <InputControl labelText="Nota de Linguagens" register={simulatorForm.register("languages_score", { valueAsNumber: true })} />
-          </div>
-          <div className="flex gap-3">
-            <InputControl labelText="Nota de Matemática" register={simulatorForm.register("math_score", { valueAsNumber: true })} />
-          </div>
+          <InputControl labelText="Nota de Linguagens" register={simulatorForm.register("languages_score", { valueAsNumber: true })} />
 
-          <div className="flex gap-3">
-            <InputControl labelText="Nota de Redação" register={simulatorForm.register("essay_score", { valueAsNumber: true })} />
-          </div>
+          <InputControl labelText="Nota de Matemática" register={simulatorForm.register("math_score", { valueAsNumber: true })} />
 
-          <div className="flex gap-3">
-            <InputControl labelText="Nota de Ciências Humanas" register={simulatorForm.register("human_science_score", { valueAsNumber: true })} />
-          </div>
+          <InputControl labelText="Nota de Redação" register={simulatorForm.register("essay_score", { valueAsNumber: true })} />
 
-          <div className="flex gap-3">
-            <InputControl labelText="Nota de Ciências da Natureza" register={simulatorForm.register("science_score", { valueAsNumber: true })} />
-          </div>
+          <InputControl labelText="Nota de Ciências Humanas" register={simulatorForm.register("human_science_score", { valueAsNumber: true })} />
 
-          <div className="flex flex-col w-full">
+          <InputControl labelText="Nota de Ciências da Natureza" register={simulatorForm.register("science_score", { valueAsNumber: true })} />
+
+          <div>
             <label className="text-lg" htmlFor="city">Selecione uma cidade</label>
-            <select className="bg-background p-2 px-4 h-10 text-xl" name="city" id="city">
-              {cities && cities.map(city => <option value={city.slug}>{city.nome}</option>)}
-            </select>
+            <CustomSelect
+              id="city"
+              options={cities}
+              value={selectedCity}
+              onChange={(options) => setSelectedCity(options as City)}
+              isDisabled={isLoadingCities}
+              onMenuClose={() => {
+                setSelectedUniversity(undefined)
+                fetchUniversities()
+              }}
+              openMenuOnFocus
+            />
           </div>
 
           <div>
-            Selecione uma universidade
-            <select name="" id=""></select>
+            <label className="text-lg" htmlFor="university">Selecione uma universidade</label>
+            <CustomSelect
+              id="university"
+              options={universities}
+              value={selectedUniversity}
+              onChange={(options) => setSelectedUniversity(options as University)}
+              isDisabled={isLoadingUniversities}
+              onMenuClose={() => {
+                setSelectedCourse(undefined)
+                fetchCourses()
+              }}
+              openMenuOnFocus
+            />
           </div>
 
           <div>
-            Selecione o curso desejado
-            <select name="" id=""></select>
+            <label className="text-lg" htmlFor="course">Selecione o curso desejado</label>
+            <CustomSelect
+              id="course"
+              options={courses}
+              value={selectedCourse}
+              onChange={(options) => setSelectedCourse(options as Course)}
+              isDisabled={isLoadingCourses}
+              openMenuOnFocus
+            />
           </div>
 
           <button
@@ -285,12 +328,42 @@ export default function Home() {
             Resultado
           </h1>
 
-          {/* <p className="mt-2">
-                A sua nota baseada nos dados informados será: {' '}
-                <span className="text-orange-400 font-bold">
-                  {simulatorResponse.finalNote.toFixed(2)}
-                </span>
-              </p> */}
+          <p className="mt-2">
+            A sua nota baseada nos dados informados será: {' '}
+            <span className="text-orange-400 font-bold">
+              {simulatorResponse.finalNote}
+            </span>
+          </p>
+
+          <p className="mt-2">Pesos:</p>
+          <p className="text-orange-400 font-bold">
+            <span className="text-slate-800">Linguagens:</span> {+simulatorResponse.course.pesoLing}
+          </p>
+          <p className="text-orange-400 font-bold">
+            <span className="text-slate-800">Matemática:</span> {+simulatorResponse.course.pesoMat}
+          </p>
+          <p className="text-orange-400 font-bold">
+            <span className="text-slate-800">Ciências Humanas:</span> {+simulatorResponse.course.pesoCH}
+          </p>
+          <p className="text-orange-400 font-bold">
+            <span className="text-slate-800">Ciências da Natureza:</span> {+simulatorResponse.course.pesoCN}
+          </p>
+          <p className="text-orange-400 font-bold">
+            <span className="text-slate-800">Redação:</span> {+simulatorResponse.course.pesoRed}
+          </p>
+
+          <p className="mt-2">Anos Anteriores:</p>
+
+          {simulatorResponse.course.notasDeCorte.map((nota, index) => (
+            <div key={index} className="mt-2">
+              <p>
+                - <span className="text-slate-800 font-semibold">{nota.ano}</span> {nota.descricao}
+              </p>
+              <p className="text-orange-400 font-bold">
+                - <span className="text-slate-800">Nota de Corte:</span> {nota.nota}
+              </p>
+            </div>
+          ))}
         </section>
       )}
 
