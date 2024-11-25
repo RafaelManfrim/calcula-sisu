@@ -259,16 +259,6 @@ export default function Home() {
         </h1>
 
         <form className="mt-4 flex flex-col gap-3">
-          <InputControl labelText="Nota de Linguagens" register={simulatorForm.register("languages_score", { valueAsNumber: true })} />
-
-          <InputControl labelText="Nota de Matemática" register={simulatorForm.register("math_score", { valueAsNumber: true })} />
-
-          <InputControl labelText="Nota de Redação" register={simulatorForm.register("essay_score", { valueAsNumber: true })} />
-
-          <InputControl labelText="Nota de Ciências Humanas" register={simulatorForm.register("human_science_score", { valueAsNumber: true })} />
-
-          <InputControl labelText="Nota de Ciências da Natureza" register={simulatorForm.register("science_score", { valueAsNumber: true })} />
-
           <div>
             <label className="text-lg" htmlFor="city">Selecione uma cidade</label>
             <CustomSelect
@@ -312,6 +302,17 @@ export default function Home() {
               openMenuOnFocus
             />
           </div>
+
+          <InputControl labelText="Nota de Linguagens" disabled={!selectedCourse} register={simulatorForm.register("languages_score", { valueAsNumber: true })} />
+
+          <InputControl labelText="Nota de Matemática" disabled={!selectedCourse} register={simulatorForm.register("math_score", { valueAsNumber: true })} />
+
+          <InputControl labelText="Nota de Redação" disabled={!selectedCourse} register={simulatorForm.register("essay_score", { valueAsNumber: true })} />
+
+          <InputControl labelText="Nota de Ciências Humanas" disabled={!selectedCourse} register={simulatorForm.register("human_science_score", { valueAsNumber: true })} />
+
+          <InputControl labelText="Nota de Ciências da Natureza" disabled={!selectedCourse} register={simulatorForm.register("science_score", { valueAsNumber: true })} />
+
 
           <button
             type="submit"

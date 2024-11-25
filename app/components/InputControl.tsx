@@ -6,6 +6,7 @@ export interface InputControlProps extends HTMLAttributes<HTMLInputElement> {
   containerClassName?: string
   labelText: string
   register?: UseFormRegisterReturn
+  disabled?: boolean
 }
 
 export function InputControl(

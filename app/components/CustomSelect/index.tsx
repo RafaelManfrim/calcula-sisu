@@ -8,8 +8,6 @@ import { CustomMenuList, OPTION_HEIGHT } from './components/CustomMenuList'
 
 interface CustomSelectProps extends ReactSelectProps {
   animated?: boolean
-  showTagsOnSelectedOptions?: boolean
-  showStatusOnSelectedOptions?: boolean
   capitalizeOptions?: boolean
   backgroundColor?: string
 }
@@ -32,8 +30,6 @@ export interface SelectOption {
 export function CustomSelect({
   isMulti = false,
   closeMenuOnSelect = true,
-  showTagsOnSelectedOptions = false,
-  showStatusOnSelectedOptions = false,
   capitalizeOptions = false,
   backgroundColor = 'transparent',
   ...rest
@@ -50,12 +46,7 @@ export function CustomSelect({
       closeMenuOnSelect={closeMenuOnSelect}
       hideSelectedOptions={false}
       formatOptionLabel={(option) => (
-        <CustomOptionLabel
-          showTags={showTagsOnSelectedOptions}
-          showStatus={showStatusOnSelectedOptions}
-          capitalize={capitalizeOptions}
-          {...(option as SelectOption)}
-        />
+        <CustomOptionLabel capitalize={capitalizeOptions} {...(option as SelectOption)} />
       )}
       formatGroupLabel={(group) => <CustomGroupLabel {...group} />}
       components={{
@@ -65,7 +56,7 @@ export function CustomSelect({
         MenuList: CustomMenuList, // (props) => <CustomMenuList {...props} />, a forma comentada de renderizar o menu causa um bug ao selecionar um item em uma posição maior que a altura máxima do menu
       }}
       styles={{
-        container: (baseStyles, state) => ({
+        container: (baseStyles) => ({
           ...baseStyles,
           flex: 1,
         }),
@@ -78,11 +69,11 @@ export function CustomSelect({
           },
           opacity: state.isDisabled ? 0.4 : 1,
         }),
-        placeholder: (baseStyles, state) => ({
+        placeholder: (baseStyles) => ({
           ...baseStyles,
           color: 'inherit',
         }),
-        dropdownIndicator: (baseStyles, state) => ({
+        dropdownIndicator: (baseStyles) => ({
           ...baseStyles,
           cursor: 'pointer',
           color: 'inherit',
@@ -90,7 +81,7 @@ export function CustomSelect({
             color: '#1385F6',
           },
         }),
-        clearIndicator: (baseStyles, state) => ({
+        clearIndicator: (baseStyles) => ({
           ...baseStyles,
           cursor: 'pointer',
           color: 'inherit',
@@ -98,11 +89,11 @@ export function CustomSelect({
             color: '#D7271D',
           },
         }),
-        menu: (baseStyles, state) => ({
+        menu: (baseStyles) => ({
           ...baseStyles,
           background: '#fff'
         }),
-        input: (baseStyles, state) => ({
+        input: (baseStyles) => ({
           ...baseStyles,
           color: 'inherit',
         }),
@@ -118,30 +109,30 @@ export function CustomSelect({
           cursor: state.isDisabled ? 'not-allowed' : 'initial',
           height: OPTION_HEIGHT,
         }),
-        singleValue: (baseStyles, state) => ({
+        singleValue: (baseStyles) => ({
           ...baseStyles,
           color: '#252a2e',
         }),
-        groupHeading: (baseStyles, state) => ({
+        groupHeading: (baseStyles) => ({
           ...baseStyles,
           color: '#252a2e',
           fontWeight: 700,
           fontSize: 16,
           // height: GROUP_HEADER_HEIGHT,
         }),
-        multiValue: (baseStyles, state) => ({
+        multiValue: (baseStyles) => ({
           ...baseStyles,
           background: '#0870D9',
           color: 'white',
           borderRadius: 4,
         }),
-        multiValueLabel: (baseStyles, state) => ({
+        multiValueLabel: (baseStyles) => ({
           ...baseStyles,
           color: 'white',
           background: '#0870D9',
           borderRadius: 4,
         }),
-        multiValueRemove: (baseStyles, state) => ({
+        multiValueRemove: (baseStyles) => ({
           ...baseStyles,
           background: '#0870D9',
           color: 'inherit',
