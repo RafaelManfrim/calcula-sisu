@@ -140,7 +140,6 @@ export function CustomSelect({
             color: '#D7271D',
           },
           borderRadius: 4,
-          // eslint-disable-next-line prettier/prettier
           'svg': {
             width: 16,
             height: 16,

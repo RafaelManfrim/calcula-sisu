@@ -239,14 +239,6 @@ export default function Home() {
     fetchCities()
   }, [])
 
-  useEffect(() => {
-    const errors = simulatorForm.formState.errors
-
-    if (Object.keys(errors).length === 0) return
-
-    console.log(errors)
-  }, [simulatorForm.formState.errors])
-
   return (
     <main className="mb-14">
       <header className="bg-orange-400 p-4 px-12 flex justify-center items-center">
@@ -319,7 +311,7 @@ export default function Home() {
             className="text-white font-bold p-2 bg-orange-400 rounded-md cursor-pointer hover:brightness-95 transition-all mt-8"
             onClick={simulatorForm.handleSubmit(handleSimulate)}
           >
-            Calcular
+            {isLoading ? "Carregando..." : "Calcular"}
           </button>
         </form>
       </section>
