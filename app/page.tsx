@@ -1,7 +1,7 @@
 'use client'
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { InputControl } from "./components/InputControl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -103,11 +103,15 @@ const simulatorSchema = z.object({
 
 export type SimulatorFormSchema = z.infer<typeof simulatorSchema>
 
+type History = {
+  [year: string]: NotaDeCorte[]
+}
+
 type SimulatorResponse = {
   notes: SimulatorFormSchema
   course: CourseInfo
   finalNote: number
-  history: NotaDeCorte[]
+  history: History
 }
 
 export default function Home() {
@@ -140,6 +144,14 @@ export default function Home() {
       const response = await api.get(`/fetch_course/${selectedCourse.id}`)
       const courseInfo = response.data[0]
 
+      const history = courseInfo.notasDeCorte.reduce((acc: History, nota: NotaDeCorte) => {
+        if (!acc[nota.ano]) {
+          acc[nota.ano] = [];
+        }
+        acc[nota.ano].push(nota);
+        return acc;
+      }, {})
+
       setSimulatorResponse({
         notes: data,
         course: courseInfo,
@@ -154,7 +166,7 @@ export default function Home() {
             Number(courseInfo.pesoCH) +
             Number(courseInfo.pesoCN) +
             Number(courseInfo.pesoRed)),
-        history: courseInfo.notasDeCorte.reverse()
+        history
       })
     } catch (error) {
       console.log(error)
@@ -239,14 +251,34 @@ export default function Home() {
     fetchCities()
   }, [])
 
+  useEffect(() => {
+    if (!selectedCity) {
+      setUniversities(undefined)
+      return
+    }
+
+    fetchUniversities()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCity])
+
+  useEffect(() => {
+    if (!selectedUniversity) {
+      setCourses(undefined)
+      return
+    }
+
+    fetchCourses()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedUniversity])
+
   return (
     <main className="mb-14">
       <header className="bg-orange-400 p-4 px-12 flex justify-center items-center">
-        <Image className="dark:invert" src={LogoImg} alt="ENEM Simulator Logo" width={180} height={38} priority />
+        <Image src={LogoImg} alt="ENEM Simulator Logo" width={180} height={38} priority />
       </header>
 
       <section className="bg-white max-w-4xl mx-auto mt-14 p-4 rounded-md shadow-md">
-        <h1 className="text-orange-400 font-bold text-4xl">
+        <h1 className="text-orange-400 font-bold text-4xl text-center">
           Simulador de Nota via SISU
         </h1>
 
@@ -257,12 +289,11 @@ export default function Home() {
               id="city"
               options={cities}
               value={selectedCity}
-              onChange={(options) => setSelectedCity(options as City)}
-              isDisabled={isLoadingCities}
-              onMenuClose={() => {
+              onChange={(options) => {
+                setSelectedCity(options as City)
                 setSelectedUniversity(undefined)
-                fetchUniversities()
               }}
+              isDisabled={isLoadingCities}
               openMenuOnFocus
             />
           </div>
@@ -273,12 +304,11 @@ export default function Home() {
               id="university"
               options={universities}
               value={selectedUniversity}
-              onChange={(options) => setSelectedUniversity(options as University)}
-              isDisabled={isLoadingUniversities}
-              onMenuClose={() => {
+              onChange={(options) => {
+                setSelectedUniversity(options as University)
                 setSelectedCourse(undefined)
-                fetchCourses()
               }}
+              isDisabled={isLoadingUniversities}
               openMenuOnFocus
             />
           </div>
@@ -317,49 +347,96 @@ export default function Home() {
       </section>
       {simulatorResponse && (
         <section className="bg-white max-w-4xl mx-auto mt-4 p-4 rounded-md shadow-md">
-          <h1 className="text-orange-400 font-bold text-4xl">
+          <h1 className="text-orange-400 font-bold text-4xl text-center">
             Resultado
           </h1>
 
-          <p className="mt-2">
-            A sua nota baseada nos dados informados será: {' '}
-            <span className="text-orange-400 font-bold">
-              {simulatorResponse.finalNote}
-            </span>
-          </p>
+          <div className="overflow-x-auto mt-3">
+            <table className="shadow-md w-full text-center">
+              <thead>
+                <tr>
+                  <th colSpan={5} className="bg-orange-400 text-white border border-orange-400">Pesos</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="border border-orange-400">Redação</td>
+                  <td className="border border-orange-400 font-bold w-16">{+simulatorResponse.course.pesoRed}</td>
+                </tr>
+                <tr>
+                  <td className="border border-orange-400">Linguagens</td>
+                  <td className="border border-orange-400 font-bold">{+simulatorResponse.course.pesoLing}</td>
+                </tr>
+                <tr>
+                  <td className="border border-orange-400">Matemática</td>
+                  <td className="border border-orange-400 font-bold">{+simulatorResponse.course.pesoMat}</td>
+                </tr>
+                <tr>
+                  <td className="border border-orange-400">Ciências Humanas</td>
+                  <td className="border border-orange-400 font-bold">{+simulatorResponse.course.pesoCH}</td>
+                </tr>
+                <tr>
+                <td className="border border-orange-400">Ciências da Natureza</td>
+                  <td className="border border-orange-400 font-bold">{+simulatorResponse.course.pesoCN}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
 
-          <p className="mt-2">Pesos:</p>
-          <p className="text-orange-400 font-bold">
-            <span className="text-slate-800">Linguagens:</span> {+simulatorResponse.course.pesoLing}
-          </p>
-          <p className="text-orange-400 font-bold">
-            <span className="text-slate-800">Matemática:</span> {+simulatorResponse.course.pesoMat}
-          </p>
-          <p className="text-orange-400 font-bold">
-            <span className="text-slate-800">Ciências Humanas:</span> {+simulatorResponse.course.pesoCH}
-          </p>
-          <p className="text-orange-400 font-bold">
-            <span className="text-slate-800">Ciências da Natureza:</span> {+simulatorResponse.course.pesoCN}
-          </p>
-          <p className="text-orange-400 font-bold">
-            <span className="text-slate-800">Redação:</span> {+simulatorResponse.course.pesoRed}
-          </p>
+          <table className="shadow-md w-full text-center mt-5">
+            <thead>
+              <tr>
+                <th colSpan={5} className="bg-orange-400 text-white border border-orange-400">
+                  A sua nota baseada nos dados informados
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="border border-orange-400 font-bold">{simulatorResponse.finalNote.toFixed(2).replace(".", ",")}</td>
+              </tr>
+            </tbody>
+          </table>
 
-          <p className="mt-2">Anos Anteriores:</p>
-
-          {simulatorResponse.course.notasDeCorte.map((nota, index) => (
-            <div key={index} className="mt-2">
-              <p>
-                - <span className="text-slate-800 font-semibold">{nota.ano}</span> {nota.descricao}
-              </p>
-              <p className="text-orange-400 font-bold">
-                - <span className="text-slate-800">Nota de Corte:</span> {nota.nota}
-              </p>
-            </div>
-          ))}
+          <table className="shadow-md w-full text-center mt-5">
+            <thead>
+              <tr>
+                <th colSpan={5} className="bg-orange-400 text-white border border-orange-400">
+                  Histórico de Notas de Corte
+                </th>
+              </tr>
+            </thead>
+            {Object.entries(simulatorResponse.history).reverse().map(([year, notasDeCorte]) => (
+              <Fragment key={year}>
+                <thead>
+                  <tr>
+                    <th colSpan={5} className="bg-orange-400 text-white border border-orange-400">
+                      {year}
+                    </th>
+                  </tr>
+                  <tr>
+                    <th className="border border-orange-400">Descrição</th>
+                    <th className="border border-orange-400">Nota de Corte</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {notasDeCorte.sort((a, b) => Number(b.nota) - Number(a.nota)).map((notas) => (
+                    <tr key={`${year}-${notas.descricao}`}>
+                      <td className="border border-orange-400 text-justify text-sm px-2">
+                        {notas.descricao}
+                      </td>
+                      <td className="border border-orange-400 font-bold">
+                        {notas.nota}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Fragment>
+            ))}
+          </table>
         </section>
       )}
-
     </main>
   );
 }

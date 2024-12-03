@@ -15,8 +15,8 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Calculadora de Nota do ENEM",
-  description: "Calcular nota do ENEM ou simular notas necessárias",
+  title: "Calcula SISU",
+  description: "Calculadora de Notas do SISU com base em dados históricos para saber a chance de entrar em um curso de ensino superior.",
 };
 
 export default function RootLayout({
@@ -29,6 +29,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <link rel="icon" href="/assets/favicon.png" sizes="any" />
         <Toaster
           position="top-right"
           reverseOrder={false}
