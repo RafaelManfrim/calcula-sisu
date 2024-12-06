@@ -194,6 +194,10 @@ export default function Home() {
         if (Number(nota.nota) === 0) {
           return acc;
         }
+
+        if (acc[nota.ano]?.find((notaDeCorte) => notaDeCorte.descricao === nota.descricao)) {
+          return acc;
+        }
         
         if (!acc[nota.ano]) {
           acc[nota.ano] = [];
