@@ -323,7 +323,7 @@ export default function Home() {
   }, [selectedUniversity])
 
   return (
-    <main className="mb-14">
+    <main>
       <header className="bg-orange-400 p-4 px-12 flex justify-center items-center">
         <Image src={LogoImg} alt="ENEM Simulator Logo" width={180} height={38} priority />
       </header>
@@ -498,6 +498,19 @@ export default function Home() {
           </table>
         </section>
       )}
+
+      <footer className="bg-orange-400 p-4 px-12 mt-14 flex flex-col gap-4 justify-center items-center">
+        <span className="text-center mt-4 max-w-[512px]">
+          O Calcula SISU é uma ferramenta desenvolvida para ajuda estudantes a terem uma noção de suas chances de entrar em um curso de ensino superior com base em dados históricos. Sendo assim, não garantimos a entrada em um curso de ensino superior.
+        </span>
+        <strong>
+          Projeto Extensionista - IFSP Catanduva - 2024
+        </strong>
+        <span>
+          Autores:
+          Rafael Manfrim, Ana Rita Pavão Green e Thiago Lopes Franco
+        </span>
+      </footer>
     </main>
   );
 }
