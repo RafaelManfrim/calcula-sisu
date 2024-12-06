@@ -17,6 +17,33 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   title: "Calcula SISU",
   description: "Calculadora de Notas do SISU com base em dados históricos para saber a chance de entrar em um curso de ensino superior.",
+  keywords: ["ENEM", "SISU", "Calculadora", "Notas", "Chances", "Universidade", "Faculdade", "Vestibular"],
+  applicationName: "Calcula SISU",
+  robots: {
+    follow: true,
+    index: true,
+  },
+  openGraph: {
+    title: "Calcula SISU",
+    description: "Calculadora de Notas do SISU com base em dados históricos para saber a chance de entrar em um curso de ensino superior.",
+    type: "website",
+    locale: "pt_BR",
+    siteName: "Calcula SISU",
+  },
+  authors: [
+    {
+      name: "Rafael Manfrim",
+      url: "https://portifolio-rafael-manfrim.vercel.app/"
+    },
+    {
+      name: "Ana Rita Pavão Green",
+      url: "https://github.com/AnaRitaGreen"
+    },
+    {
+      name: "Thiago Lopes Franco",
+      url: "https://github.com/ThiagoLopesFranco"
+    }
+  ]
 };
 
 export default function RootLayout({

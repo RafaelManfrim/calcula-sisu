@@ -10,6 +10,7 @@ import { api } from "./lib/axios";
 import toast from "react-hot-toast";
 import LogoImg from "@/app/assets/logo.png"
 import { CustomSelect } from "./components/CustomSelect";
+import clsx from "clsx";
 
 type City = {
   id: string
@@ -114,6 +115,51 @@ type SimulatorResponse = {
   history: History
 }
 
+// export function unselectUnavailableOption(
+//   selectedOption: SelectOption | null | undefined,
+//   availableOption: SelectOption,
+// ): SelectOption | null {
+//   if (selectedOption && availableOption) {
+//     const selectedOptionsAvailable = selectedOptions.reduce(
+//       (optionsArrayAcc, selectedOption) => {
+//         let option: SelectOption | undefined
+
+//         availableOptions.every((availableOption) => {
+//           if (availableOption.value === selectedOption.value) {
+//             option = availableOption
+//           } else if (
+//             availableOption.options &&
+//             availableOption.options.length > 0
+//           ) {
+//             option = (availableOption.options as SelectOption[]).find(
+//               (availableSubOption) =>
+//                 availableSubOption.value === selectedOption.value &&
+//                 (!availableSubOption.runs ||
+//                   availableSubOption.runs.length > 0),
+//             )
+//           }
+
+//           return !option
+//         })
+
+//         if (option) {
+//           optionsArrayAcc.push(option)
+//         }
+
+//         return optionsArrayAcc
+//       },
+//       {} as SelectOption,
+//     )
+
+//     // console.log('Selected Models Available: ', selectedOptionsAvailable)
+
+//     // console.log('========================')
+//     return selectedOption
+//   }
+
+//   return null
+// }
+
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false)
 
@@ -126,8 +172,8 @@ export default function Home() {
   const [courses, setCourses] = useState<Course[]>()
 
   const [selectedCity, setSelectedCity] = useState<City>()
-  const [selectedUniversity, setSelectedUniversity] = useState<University>()
-  const [selectedCourse, setSelectedCourse] = useState<Course>()
+  const [selectedUniversity, setSelectedUniversity] = useState<University | null>()
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>()
 
   const [simulatorResponse, setSimulatorResponse] = useState<SimulatorResponse>()
 
@@ -145,9 +191,14 @@ export default function Home() {
       const courseInfo = response.data[0]
 
       const history = courseInfo.notasDeCorte.reduce((acc: History, nota: NotaDeCorte) => {
+        if (Number(nota.nota) === 0) {
+          return acc;
+        }
+        
         if (!acc[nota.ano]) {
           acc[nota.ano] = [];
         }
+
         acc[nota.ano].push(nota);
         return acc;
       }, {})
@@ -291,10 +342,12 @@ export default function Home() {
               value={selectedCity}
               onChange={(options) => {
                 setSelectedCity(options as City)
-                setSelectedUniversity(undefined)
+                setSelectedUniversity(null)
+                setSelectedCourse(null)
               }}
               isDisabled={isLoadingCities}
               openMenuOnFocus
+              backgroundColor="#f7f7f7"
             />
           </div>
 
@@ -306,10 +359,11 @@ export default function Home() {
               value={selectedUniversity}
               onChange={(options) => {
                 setSelectedUniversity(options as University)
-                setSelectedCourse(undefined)
+                setSelectedCourse(null)
               }}
               isDisabled={isLoadingUniversities}
               openMenuOnFocus
+              backgroundColor="#f7f7f7"
             />
           </div>
 
@@ -322,6 +376,7 @@ export default function Home() {
               onChange={(options) => setSelectedCourse(options as Course)}
               isDisabled={isLoadingCourses}
               openMenuOnFocus
+              backgroundColor="#f7f7f7"
             />
           </div>
 
@@ -426,7 +481,13 @@ export default function Home() {
                       <td className="border border-orange-400 text-justify text-sm px-2">
                         {notas.descricao}
                       </td>
-                      <td className="border border-orange-400 font-bold">
+                      <td className={clsx(
+                        "border border-orange-400 font-bold text-orange-400", 
+                        Number(notas.nota) > simulatorResponse.finalNote + 30 && "text-red-500", 
+                        Number(notas.nota) < simulatorResponse.finalNote - 30 && "text-green-500"
+                        )}
+                        title={Number(notas.nota) > simulatorResponse.finalNote + 30 ? "Chances baixas de entrar com base em sua nota" : Number(notas.nota) < simulatorResponse.finalNote - 30 ? "Chances altas de entrar com base em sua nota" : "Chances médias de entrar com base em sua nota" }
+                      >
                         {notas.nota}
                       </td>
                     </tr>

@@ -18,7 +18,7 @@ export function InputControl(
       <label className="text-lg" htmlFor={rest.id}>{labelText}</label>
       <input
         type="number"
-        className={clsx("bg-background p-2 px-4 h-10 text-xl", className)}
+        className={clsx("bg-input disabled:bg-background disabled:cursor-not-allowed p-2 px-4 h-10 text-xl", className)}
         {...register}
         {...rest}
       />
