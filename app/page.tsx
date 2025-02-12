@@ -1,16 +1,16 @@
 'use client'
 
-import Image from "next/image";
-import { Fragment, useEffect, useState } from "react";
-import { InputControl } from "./components/InputControl";
+import Image from "next/image"
+import toast from "react-hot-toast"
+import { Fragment, useEffect, useState } from "react"
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { api } from "./lib/axios";
-import toast from "react-hot-toast";
+
+import { InputControl } from "./components/InputControl"
+import { CustomSelect } from "./components/CustomSelect"
+import { api } from "./lib/axios"
 import LogoImg from "@/app/assets/logo.png"
-import { CustomSelect } from "./components/CustomSelect";
-import clsx from "clsx";
 
 type City = {
   id: string
