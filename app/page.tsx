@@ -115,50 +115,20 @@ type SimulatorResponse = {
   history: History
 }
 
-// export function unselectUnavailableOption(
-//   selectedOption: SelectOption | null | undefined,
-//   availableOption: SelectOption,
-// ): SelectOption | null {
-//   if (selectedOption && availableOption) {
-//     const selectedOptionsAvailable = selectedOptions.reduce(
-//       (optionsArrayAcc, selectedOption) => {
-//         let option: SelectOption | undefined
-
-//         availableOptions.every((availableOption) => {
-//           if (availableOption.value === selectedOption.value) {
-//             option = availableOption
-//           } else if (
-//             availableOption.options &&
-//             availableOption.options.length > 0
-//           ) {
-//             option = (availableOption.options as SelectOption[]).find(
-//               (availableSubOption) =>
-//                 availableSubOption.value === selectedOption.value &&
-//                 (!availableSubOption.runs ||
-//                   availableSubOption.runs.length > 0),
-//             )
-//           }
-
-//           return !option
-//         })
-
-//         if (option) {
-//           optionsArrayAcc.push(option)
-//         }
-
-//         return optionsArrayAcc
-//       },
-//       {} as SelectOption,
-//     )
-
-//     // console.log('Selected Models Available: ', selectedOptionsAvailable)
-
-//     // console.log('========================')
-//     return selectedOption
-//   }
-
-//   return null
-// }
+const statusNotas = {
+  BAIXO: {
+    color: "text-red-500",
+    title: "Chances baixas de entrar com base em sua nota"
+  },
+  MEDIO: {
+    color: "text-orange-400",
+    title: "Chances médias de entrar com base em sua nota"
+  },
+  ALTO: {
+    color: "text-green-500",
+    title: "Chances altas de entrar com base em sua nota"
+  }
+}
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false)
@@ -198,7 +168,7 @@ export default function Home() {
         if (acc[nota.ano]?.find((notaDeCorte) => notaDeCorte.descricao === nota.descricao)) {
           return acc;
         }
-        
+
         if (!acc[nota.ano]) {
           acc[nota.ano] = [];
         }
@@ -313,7 +283,7 @@ export default function Home() {
     }
 
     fetchUniversities()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCity])
 
   useEffect(() => {
@@ -323,7 +293,7 @@ export default function Home() {
     }
 
     fetchCourses()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedUniversity])
 
   return (
@@ -435,13 +405,13 @@ export default function Home() {
                   <td className="border border-orange-400 font-bold">{+simulatorResponse.course.pesoCH}</td>
                 </tr>
                 <tr>
-                <td className="border border-orange-400">Ciências da Natureza</td>
+                  <td className="border border-orange-400">Ciências da Natureza</td>
                   <td className="border border-orange-400 font-bold">{+simulatorResponse.course.pesoCN}</td>
                 </tr>
               </tbody>
             </table>
           </div>
-          
+
 
           <table className="shadow-md w-full text-center mt-5">
             <thead>
@@ -480,22 +450,25 @@ export default function Home() {
                   </tr>
                 </thead>
                 <tbody>
-                  {notasDeCorte.sort((a, b) => Number(b.nota) - Number(a.nota)).map((notas) => (
-                    <tr key={`${year}-${notas.descricao}`}>
-                      <td className="border border-orange-400 text-justify text-sm px-2">
-                        {notas.descricao}
-                      </td>
-                      <td className={clsx(
-                        "border border-orange-400 font-bold text-orange-400", 
-                        Number(notas.nota) > simulatorResponse.finalNote + 30 && "text-red-500", 
-                        Number(notas.nota) < simulatorResponse.finalNote - 30 && "text-green-500"
-                        )}
-                        title={Number(notas.nota) > simulatorResponse.finalNote + 30 ? "Chances baixas de entrar com base em sua nota" : Number(notas.nota) < simulatorResponse.finalNote - 30 ? "Chances altas de entrar com base em sua nota" : "Chances médias de entrar com base em sua nota" }
-                      >
-                        {notas.nota}
-                      </td>
-                    </tr>
-                  ))}
+                  {notasDeCorte.sort((a, b) => Number(b.nota) - Number(a.nota)).map((notas) => {
+                    const status = Number(notas.nota) > simulatorResponse.finalNote + 30 ?
+                      statusNotas.BAIXO : Number(notas.nota) < simulatorResponse.finalNote - 30 ?
+                        statusNotas.ALTO : statusNotas.MEDIO
+
+                    return (
+                      <tr key={`${year}-${notas.descricao}`}>
+                        <td className="border border-orange-400 text-justify text-sm px-2">
+                          {notas.descricao}
+                        </td>
+                        <td
+                          className={`border border-orange-400 font-bold ${status.color}`}
+                          title={status.title}
+                        >
+                          {notas.nota}
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </Fragment>
             ))}
